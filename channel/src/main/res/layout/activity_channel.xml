@@ -4,14 +4,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="co.getchannel.example.MainActivity">
+    tools:context="co.getchannel.channel.ChannelActivity">
 
     <Button
-        android:id="@+id/contactButton"
+        android:id="@+id/button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Contact"
-        tools:layout_editor_absoluteX="148dp"
-        tools:layout_editor_absoluteY="231dp" />
-
+        android:text="send"
+        tools:layout_editor_absoluteX="216dp"
+        tools:layout_editor_absoluteY="389dp" />
 </android.support.constraint.ConstraintLayout>

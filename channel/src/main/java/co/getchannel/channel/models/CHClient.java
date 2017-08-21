@@ -1,0 +1,136 @@
+package co.getchannel.channel.models;
+
+import android.app.Activity;
+import android.content.SharedPreferences;
+import android.util.Log;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import co.getchannel.channel.CHConfiguration;
+import co.getchannel.channel.Channel;
+import co.getchannel.channel.api.CHAPI;
+import co.getchannel.channel.api.CHAPIInterface;
+import co.getchannel.channel.helpers.CHConstants;
+import co.getchannel.channel.responses.CHApplicationInfoResponse;
+import co.getchannel.channel.responses.CHClientResponse;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+/**
+ * Created by Admin on 8/21/2017.
+ */
+
+public class CHClient {
+    public static String clientID;
+    public static String userID;
+    public static Map<String,String> userData;
+    private static CHClient _client = null;
+    public static CHClient currentClient()
+    {
+        if (_client == null)
+            _client = new CHClient();
+        return _client;
+    }
+
+    public static String getClientID() {
+        String clientID = "";
+        Activity act = Channel.getActivity();
+        if (act != null) {
+            SharedPreferences sharedPref = act.getPreferences(android.content.Context.MODE_PRIVATE);
+            clientID = sharedPref.getString("CH_CHANNEL_ID" + CHConfiguration.getApplicationId(),clientID);
+        }
+        return clientID;
+    }
+
+    public final static void setClientID(String clientID) {
+        Activity act = Channel.getActivity();
+        if (act != null) {
+            SharedPreferences sharedPref = act.getPreferences(android.content.Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPref.edit();
+            editor.putString("CH_CHANNEL_ID" + CHConfiguration.getApplicationId(), clientID);
+            editor.commit();
+        }
+    }
+
+
+    public static String getUserID() {
+        return userID;
+    }
+
+    public static void setUserID(String userID) {
+        CHClient.userID = userID;
+    }
+
+    public static Map<String, String> getUserData() {
+        return userData;
+    }
+
+    public static void setUserData(Map<String, String> userData) {
+        CHClient.userData = userData;
+    }
+
+    public static void applicationInfo(){
+        CHAPIInterface apiService = CHAPI.getAPIWithApplication().create(CHAPIInterface.class);
+        Call<CHApplicationInfoResponse> call = apiService.getApplicationInfo();
+        call.enqueue(new Callback<CHApplicationInfoResponse>() {
+            @Override
+            public void onResponse(Call<CHApplicationInfoResponse> call, Response<CHApplicationInfoResponse> response) {
+                if (response.code() == 200){
+                    List<Agent> agents = response.body().getResult().getData().getAgents();
+                    Application app = response.body().getResult().getData().getApplication();
+                    Log.d(CHConstants.kChannel_tag,"Number of agent received: " + agents.size());
+                }else{
+                    Log.d(CHConstants.kChannel_tag, response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<CHApplicationInfoResponse>call, Throwable t) {
+                // Log error here since request failed
+                Log.d(CHConstants.kChannel_tag,t.toString());
+            }
+        });
+    }
+
+    public static void connectClientWithUserID(String userID,Map<String,String> userData){
+        CHAPIInterface apiService = CHAPI.getAPIWithApplication().create(CHAPIInterface.class);
+        Client client = new Client();
+        if (userID != null){
+            client.setUserID(userID);
+
+        }
+        if(userData != null){
+            client.setUserData(userData);
+        }
+        Map<String,String> deviceInfo = new HashMap<String,String>();
+        deviceInfo.put("OS Version",System.getProperty("os.version") + "(" + android.os.Build.VERSION.INCREMENTAL + ")");
+        deviceInfo.put("OS API Level",android.os.Build.VERSION.SDK_INT + "");
+        deviceInfo.put("Device",android.os.Build.DEVICE);
+        deviceInfo.put("Device",android.os.Build.MODEL + " ("+ android.os.Build.PRODUCT + ")");
+        client.setDeviceInfo(deviceInfo);
+
+        Call<CHClientResponse> call = apiService.connectClient(client);
+        call.enqueue(new Callback<CHClientResponse>() {
+            @Override
+            public void onResponse(Call<CHClientResponse> call, Response<CHClientResponse> response) {
+                if (response.code() == 200){
+                    Log.d(CHConstants.kChannel_tag, response.body().getResult().getData().getClientID());
+                    CHClient.currentClient().setClientID(response.body().getResult().getData().getClientID());
+                }else{
+                    Log.d(CHConstants.kChannel_tag, response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<CHClientResponse>call, Throwable t) {
+                // Log error here since request failed
+                Log.d(CHConstants.kChannel_tag,t.toString());
+            }
+        });
+
+
+    }
+}
