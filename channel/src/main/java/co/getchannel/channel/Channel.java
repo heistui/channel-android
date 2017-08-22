@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 
+import co.getchannel.channel.activities.ChatActivity;
 import co.getchannel.channel.models.CHClient;
 
 import static co.getchannel.channel.helpers.CHConstants.kChannel_tag;
@@ -69,7 +70,7 @@ public class Channel  {
 
 
     public final static void chatViewWithUserID(String userID, HashMap<String,String> userData){
-        Intent myIntent = new Intent(activity, ChannelActivity.class);
+        Intent myIntent = new Intent(activity, ChatActivity.class);
         myIntent.putExtra("userData",userData);
         myIntent.putExtra("userID",userID);
         activity.startActivity(myIntent);
