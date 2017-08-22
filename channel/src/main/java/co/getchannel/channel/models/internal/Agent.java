@@ -1,4 +1,4 @@
-package co.getchannel.channel.models;
+package co.getchannel.channel.models.internal;
 
 import com.google.gson.annotations.SerializedName;
 

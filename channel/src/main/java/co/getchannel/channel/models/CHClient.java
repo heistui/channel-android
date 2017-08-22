@@ -6,15 +6,18 @@ import android.util.Log;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import co.getchannel.channel.CHConfiguration;
 import co.getchannel.channel.Channel;
 import co.getchannel.channel.api.CHAPI;
 import co.getchannel.channel.api.CHAPIInterface;
 import co.getchannel.channel.helpers.CHConstants;
+import co.getchannel.channel.models.internal.Agent;
+import co.getchannel.channel.models.internal.Application;
+import co.getchannel.channel.models.internal.Client;
 import co.getchannel.channel.responses.CHApplicationInfoResponse;
 import co.getchannel.channel.responses.CHClientResponse;
+import co.getchannel.channel.responses.CHThreadResponse;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -26,7 +29,7 @@ import retrofit2.Response;
 public class CHClient {
     public static String clientID;
     public static String userID;
-    public static Map<String,String> userData;
+    public static HashMap<String,String> userData;
     private static CHClient _client = null;
     public static CHClient currentClient()
     {
@@ -64,11 +67,11 @@ public class CHClient {
         CHClient.userID = userID;
     }
 
-    public static Map<String, String> getUserData() {
+    public static HashMap<String, String> getUserData() {
         return userData;
     }
 
-    public static void setUserData(Map<String, String> userData) {
+    public static void setUserData(HashMap<String, String> userData) {
         CHClient.userData = userData;
     }
 
@@ -95,7 +98,7 @@ public class CHClient {
         });
     }
 
-    public static void connectClientWithUserID(String userID,Map<String,String> userData){
+    public static void connectClientWithUserID(String userID,HashMap<String,String> userData){
         CHAPIInterface apiService = CHAPI.getAPIWithApplication().create(CHAPIInterface.class);
         Client client = new Client();
         if (userID != null){
@@ -105,7 +108,7 @@ public class CHClient {
         if(userData != null){
             client.setUserData(userData);
         }
-        Map<String,String> deviceInfo = new HashMap<String,String>();
+        HashMap<String,String> deviceInfo = new HashMap<String,String>();
         deviceInfo.put("OS Version",System.getProperty("os.version") + "(" + android.os.Build.VERSION.INCREMENTAL + ")");
         deviceInfo.put("OS API Level",android.os.Build.VERSION.SDK_INT + "");
         deviceInfo.put("Device",android.os.Build.DEVICE);
@@ -130,7 +133,64 @@ public class CHClient {
                 Log.d(CHConstants.kChannel_tag,t.toString());
             }
         });
+    }
 
+    public static void updateClientData(String userID,HashMap<String,String> userData){
+        CHAPIInterface apiService = CHAPI.getAPIWithApplication().create(CHAPIInterface.class);
+        Client client = new Client();
+        if (userID != null){
+            client.setUserID(userID);
 
+        }
+        if(userData != null){
+            client.setUserData(userData);
+        }
+        HashMap<String,String> deviceInfo = new HashMap<String,String>();
+        deviceInfo.put("OS Version",System.getProperty("os.version") + "(" + android.os.Build.VERSION.INCREMENTAL + ")");
+        deviceInfo.put("OS API Level",android.os.Build.VERSION.SDK_INT + "");
+        deviceInfo.put("Device",android.os.Build.DEVICE);
+        deviceInfo.put("Device",android.os.Build.MODEL + " ("+ android.os.Build.PRODUCT + ")");
+        client.setDeviceInfo(deviceInfo);
+
+        Call<CHClientResponse> call = apiService.updateCllentData(client);
+        call.enqueue(new Callback<CHClientResponse>() {
+            @Override
+            public void onResponse(Call<CHClientResponse> call, Response<CHClientResponse> response) {
+                if (response.code() == 200){
+                    Log.d(CHConstants.kChannel_tag, "updated " + response.body().getResult().getData().getClientID());
+                    CHClient.currentClient().setClientID(response.body().getResult().getData().getClientID());
+                }else{
+                    Log.d(CHConstants.kChannel_tag, response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<CHClientResponse>call, Throwable t) {
+                // Log error here since request failed
+                Log.d(CHConstants.kChannel_tag,t.toString());
+            }
+        });
+    }
+
+    public static void activeThread(){
+        CHAPIInterface apiService = CHAPI.getAPIWithApplication().create(CHAPIInterface.class);
+        Call<CHThreadResponse> call = apiService.activeThread();
+        call.enqueue(new Callback<CHThreadResponse>() {
+            @Override
+            public void onResponse(Call<CHThreadResponse> call, Response<CHThreadResponse> response) {
+                if (response.code() == 200){
+                    Log.d(CHConstants.kChannel_tag, "activeThread " + response.body().getResult().getData());
+                    CHClient.currentClient().setClientID(response.body().getResult().getData().getClientID());
+                }else{
+                    Log.d(CHConstants.kChannel_tag, response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<CHThreadResponse>call, Throwable t) {
+                // Log error here since request failed
+                Log.d(CHConstants.kChannel_tag,t.toString());
+            }
+        });
     }
 }

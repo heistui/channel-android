@@ -2,17 +2,24 @@ package co.getchannel.channel.responses;
 
 import com.google.gson.annotations.SerializedName;
 
-import java.util.List;
-
-import co.getchannel.channel.models.Agent;
-import co.getchannel.channel.models.Application;
-
 /**
  * Created by Admin on 8/16/2017.
  */
 
 public class CHClientResponse {
     public class CHClientResult{
+        public class CHClientData{
+            @SerializedName("clientID")
+            private String clientID;
+
+            public String getClientID() {
+                return clientID;
+            }
+
+            public void setClientID(String clientID) {
+                this.clientID = clientID;
+            }
+        }
         @SerializedName("data")
         private CHClientData data;
 
@@ -25,18 +32,7 @@ public class CHClientResponse {
         }
     }
 
-    public class CHClientData{
-        @SerializedName("clientID")
-        private String clientID;
 
-        public String getClientID() {
-            return clientID;
-        }
-
-        public void setClientID(String clientID) {
-            this.clientID = clientID;
-        }
-    }
 
     @SerializedName("code")
     private int code;

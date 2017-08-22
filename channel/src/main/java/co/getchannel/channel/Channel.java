@@ -6,9 +6,11 @@ package co.getchannel.channel;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Bundle;
 import android.util.Log;
 
 import java.lang.ref.WeakReference;
+import java.util.HashMap;
 import java.util.Map;
 
 
@@ -44,7 +46,7 @@ public class Channel  {
         Log.d(kChannel_tag,CHConfiguration.getApplicationId());
     }
 
-    public final static void setupActivityWithApplicationID(final WeakReference<Activity> mReference,String applicationID,String userID,Map<String,String>userData){
+    public final static void setupActivityWithApplicationID(final WeakReference<Activity> mReference,String applicationID,String userID,HashMap<String,String>userData){
         Activity act = mReference.get();
         if (act != null) {
             activity = act;
@@ -52,7 +54,7 @@ public class Channel  {
         }
         Log.d(kChannel_tag,CHConfiguration.getApplicationId());
     }
-    public final static void setupWithApplicationID(String applicationId,String userID,Map<String,String>userData){
+    public final static void setupWithApplicationID(String applicationId,String userID,HashMap<String,String>userData){
         CHConfiguration.setApplicationId(applicationId);
         if (userID != null){
             CHClient.currentClient().setUserID(userID);
@@ -66,11 +68,11 @@ public class Channel  {
     }
 
 
-    public final static void chatViewWithUserID(String userID, Map<String,String> userData){
+    public final static void chatViewWithUserID(String userID, HashMap<String,String> userData){
         Intent myIntent = new Intent(activity, ChannelActivity.class);
+        myIntent.putExtra("userData",userData);
+        myIntent.putExtra("userID",userID);
         activity.startActivity(myIntent);
     }
-
-
 
 }
