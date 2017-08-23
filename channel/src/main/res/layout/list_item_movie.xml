@@ -22,7 +22,7 @@
             android:layout_gravity="top"
             android:paddingRight="16dp"
             android:textStyle="bold"
-            android:textColor="@color/colorBlack"
+            android:textColor="@color/black"
             android:textSize="16sp" />
 
 
@@ -31,7 +31,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingRight="16dp"
-            android:textColor="@color/colorGreyLight" />
+            android:textColor="@color/warm_grey" />
 
         <TextView
             android:id="@+id/description"
@@ -39,7 +39,7 @@
             android:layout_height="wrap_content"
             android:maxLines="3"
             android:paddingRight="16dp"
-            android:textColor="@color/colorGreyLight" />
+            android:textColor="@color/warm_grey" />
 
     </LinearLayout>
 
@@ -55,7 +55,7 @@
             android:layout_centerInParent="true"
             android:scaleType="centerCrop"
             android:src="@drawable/star"
-            android:tint="@color/colorAccent" />
+            android:tint="@color/cornflower_blue_two" />
 
 
         <TextView

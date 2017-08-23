@@ -70,6 +70,7 @@ public class Channel  {
 
 
     public final static void chatViewWithUserID(String userID, HashMap<String,String> userData){
+
         Intent myIntent = new Intent(activity, ChatActivity.class);
         myIntent.putExtra("userData",userData);
         myIntent.putExtra("userID",userID);
