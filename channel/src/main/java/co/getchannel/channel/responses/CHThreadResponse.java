@@ -64,9 +64,10 @@ public class CHThreadResponse {
             }
 
             public class CHThreadMessage{
-                @SerializedName("ID")
-                private String createdAt;
+
                 @SerializedName("createdAt")
+                private String createdAt;
+                @SerializedName("ID")
                 private String ID;
                 @SerializedName("isFromBusiness")
                 private Boolean isFromBusiness;
