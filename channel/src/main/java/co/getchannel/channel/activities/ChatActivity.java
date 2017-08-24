@@ -1,6 +1,5 @@
 package co.getchannel.channel.activities;
 
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -8,7 +7,6 @@ import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
@@ -17,31 +15,87 @@ import com.github.bassaer.chatmessageview.models.Message;
 import com.github.bassaer.chatmessageview.models.User;
 import com.github.bassaer.chatmessageview.utils.ChatBot;
 import com.github.bassaer.chatmessageview.views.ChatView;
+import com.tylerjroach.eventsource.EventSource;
+import com.tylerjroach.eventsource.EventSourceHandler;
+import com.tylerjroach.eventsource.MessageEvent;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Locale;
+import java.util.Map;
 import java.util.Random;
-import java.util.TimeZone;
 
-import co.getchannel.channel.FetchComplete;
+import co.getchannel.channel.CHConfiguration;
+import co.getchannel.channel.callback.ThreadFetchComplete;
 import co.getchannel.channel.R;
-import co.getchannel.channel.adapter.ChatsAdapter;
+import co.getchannel.channel.helpers.CHConstants;
 import co.getchannel.channel.models.CHClient;
 import co.getchannel.channel.responses.CHThreadResponse;
 
-public class ChatActivity extends AppCompatActivity implements FetchComplete {
+public class ChatActivity extends AppCompatActivity implements ThreadFetchComplete {
     private RecyclerView recyclerView;
     private ChatView mChatView;
 
+    private SSEHandler sseHandler = new SSEHandler();
 
-    public void execute(CHThreadResponse data){
-//        recyclerView.setAdapter(new ChatsAdapter(data.getResult().getData().getMessages(), R.layout.list_item_movie, getApplicationContext()));
+    private EventSource eventSource;
+    private void startEventSource() {
+        EventSource eventSource;
+        Map<String,String> extraHeaderParameters = new HashMap<String,String>() ;
+        String clientID = CHClient.currentClient().getClientID()==null?"":CHClient.currentClient().getClientID();
+        String appID =  CHConfiguration.getApplicationId();
+        extraHeaderParameters.put("X-Channel-Client-ID",clientID);
+        extraHeaderParameters.put("X-Channel-Application-Key",appID);
+        eventSource = new EventSource.Builder(CHConstants.BASE_URL + "subscribe")
+                .eventHandler(sseHandler)
+               .headers(extraHeaderParameters)
+                .build();
+        eventSource.connect();
+    }
+
+    private void stopEventSource() {
+        if (eventSource != null)
+            eventSource.close();
+        sseHandler = null;
+    }
+    private class SSEHandler implements EventSourceHandler {
+
+        public SSEHandler() {
+        }
+
+        @Override
+        public void onConnect() {
+            Log.v("SSE Connected", "True");
+        }
+
+        @Override
+        public void onMessage(String event, MessageEvent message) {
+            Log.v("SSE Message", event);
+            Log.v("SSE Message: ", message.lastEventId);
+            Log.v("SSE Message: ", message.data);
+        }
+
+        @Override
+        public void onComment(String comment) {
+            //comments only received if exposeComments turned on
+            Log.v("SSE Comment", comment);
+        }
+
+        @Override
+        public void onError(Throwable t) {
+            Log.v("SSE Error", "");
+            //ignore ssl NPE on eventSource.close()
+        }
+
+        @Override
+        public void onClosed(boolean willReconnect) {
+            Log.v("SSE Closed", "reconnect? " + willReconnect);
+        }
+    }
+
+
+    public void complete(CHThreadResponse data){
+//        recyclerView.setAdapter(new ChatsAdapter(data.getResul   t().getData().getMessages(), R.layout.list_item_movie, getApplicationContext()));
 
         for (CHThreadResponse.CHThreadResult.CHThreadData.CHThreadMessage msg : data.getResult().getData().getMessages()) {
             //User id
@@ -94,8 +148,6 @@ public class ChatActivity extends AppCompatActivity implements FetchComplete {
             }
 
         }
-
-
     }
 
     @Override
@@ -178,5 +230,8 @@ public class ChatActivity extends AppCompatActivity implements FetchComplete {
             }
 
         });
+
+
+        this.startEventSource();
     }
 }

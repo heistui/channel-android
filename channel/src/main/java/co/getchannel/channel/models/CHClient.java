@@ -9,7 +9,7 @@ import java.util.List;
 
 import co.getchannel.channel.CHConfiguration;
 import co.getchannel.channel.Channel;
-import co.getchannel.channel.FetchComplete;
+import co.getchannel.channel.callback.ThreadFetchComplete;
 import co.getchannel.channel.api.CHAPI;
 import co.getchannel.channel.api.CHAPIInterface;
 import co.getchannel.channel.helpers.CHConstants;
@@ -174,7 +174,7 @@ public class CHClient {
     }
 
 
-    public static void activeThread(final FetchComplete fetchComplete){
+    public static void activeThread(final ThreadFetchComplete fetchComplete){
         CHAPIInterface apiService = CHAPI.getAPIWithApplication().create(CHAPIInterface.class);
         Call<CHThreadResponse> call = apiService.activeThread();
         call.enqueue(new Callback<CHThreadResponse>() {
@@ -182,7 +182,7 @@ public class CHClient {
             public void onResponse(Call<CHThreadResponse> call, Response<CHThreadResponse> response) {
                 if (response.code() == 200){
                     Log.d(CHConstants.kChannel_tag, "activeThread " + response.body().getResult().getData());
-                    fetchComplete.execute(response.body());
+                    fetchComplete.complete(response.body());
                     CHClient.currentClient().setClientID(response.body().getResult().getData().getClientID());
                 }else{
                     Log.d(CHConstants.kChannel_tag, response.message());
