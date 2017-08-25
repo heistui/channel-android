@@ -19,6 +19,8 @@ import com.tylerjroach.eventsource.EventSource;
 import com.tylerjroach.eventsource.EventSourceHandler;
 import com.tylerjroach.eventsource.MessageEvent;
 
+import org.json.JSONObject;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -26,17 +28,19 @@ import java.util.Map;
 import java.util.Random;
 
 import co.getchannel.channel.CHConfiguration;
+import co.getchannel.channel.callback.SendMessageComplete;
 import co.getchannel.channel.callback.ThreadFetchComplete;
 import co.getchannel.channel.R;
 import co.getchannel.channel.helpers.CHConstants;
 import co.getchannel.channel.models.CHClient;
+import co.getchannel.channel.responses.CHMessageResponse;
 import co.getchannel.channel.responses.CHThreadResponse;
 
-public class ChatActivity extends AppCompatActivity implements ThreadFetchComplete {
+public class ChatActivity extends AppCompatActivity implements ThreadFetchComplete,SendMessageComplete {
     private RecyclerView recyclerView;
     private ChatView mChatView;
-
     private SSEHandler sseHandler = new SSEHandler();
+    private ChatActivity activity;
 
     private EventSource eventSource;
     private void startEventSource() {
@@ -70,9 +74,51 @@ public class ChatActivity extends AppCompatActivity implements ThreadFetchComple
 
         @Override
         public void onMessage(String event, MessageEvent message) {
-            Log.v("SSE Message", event);
-            Log.v("SSE Message: ", message.lastEventId);
-            Log.v("SSE Message: ", message.data);
+//            Log.v("SSE Message", event);
+//            Log.v("SSE Message: ", message.lastEventId);
+//            Log.v("SSE Message: ", message.data);
+
+
+            try  {
+                JSONObject mainObject = new JSONObject(message.data);
+                JSONObject data = mainObject.getJSONObject("data");
+                String text = data.getString("text");
+
+                JSONObject sender = mainObject.getJSONObject("sender");
+                String name = sender.getString("name");
+
+                Calendar cal = Calendar.getInstance();
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+                try {
+                    cal.setTime(sdf.parse(data.getString("createdAt")));// all done
+                }catch (Exception e){
+
+                }
+                Bitmap myIcon  = BitmapFactory.decodeResource(getResources(), R.drawable.face_2);
+                final User me = new User(0, name, myIcon);
+                final Message receivedMessage = new Message.Builder()
+                        .setUser(me)
+                        .setRightMessage(false)
+                        .setMessageText(text)
+                        .setCreatedAt(cal)
+                        .hideIcon(false)
+                        .build();
+                mChatView.receive(receivedMessage);
+
+//                // Return within 3 seconds
+//                int sendDelay = (new Random().nextInt(4) + 1) * 1000;
+//                new Handler().postDelayed(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        mChatView.receive(receivedMessage);
+//                    }
+//                }, sendDelay);
+
+
+            }catch (Exception e){
+
+            }
+
         }
 
         @Override
@@ -93,6 +139,9 @@ public class ChatActivity extends AppCompatActivity implements ThreadFetchComple
         }
     }
 
+    public void complete(CHMessageResponse data){
+
+    }
 
     public void complete(CHThreadResponse data){
 //        recyclerView.setAdapter(new ChatsAdapter(data.getResul   t().getData().getMessages(), R.layout.list_item_movie, getApplicationContext()));
@@ -134,7 +183,7 @@ public class ChatActivity extends AppCompatActivity implements ThreadFetchComple
                         .build();
 
                 //Set to chat view
-                mChatView.send(message);
+                mChatView.receive(message);
             }else{
                 Message message = new Message.Builder()
                         .setUser(me)
@@ -154,6 +203,7 @@ public class ChatActivity extends AppCompatActivity implements ThreadFetchComple
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+        activity = this;
 
 //        recyclerView = (RecyclerView) findViewById(R.id.movies_recycler_view);
 //        recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -199,6 +249,11 @@ public class ChatActivity extends AppCompatActivity implements ThreadFetchComple
         mChatView.setOnClickSendButtonListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
+                co.getchannel.channel.models.internal.Message m = new co.getchannel.channel.models.internal.Message();
+                m.setText(mChatView.getInputText());
+                CHClient.currentClient().sendMessage(activity,m);
+
                 //new message
                 Message message = new Message.Builder()
                         .setUser(me)
@@ -210,23 +265,23 @@ public class ChatActivity extends AppCompatActivity implements ThreadFetchComple
                 mChatView.send(message);
                 //Reset edit text
                 mChatView.setInputText("");
-
-                //Receive message
-                final Message receivedMessage = new Message.Builder()
-                        .setUser(you)
-                        .setRightMessage(false)
-                        .setMessageText(ChatBot.talk(me.getName(), message.getMessageText()))
-                        .build();
-
-                // This is a demo bot
-                // Return within 3 seconds
-                int sendDelay = (new Random().nextInt(4) + 1) * 1000;
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        mChatView.receive(receivedMessage);
-                    }
-                }, sendDelay);
+//
+//                //Receive message
+//                final Message receivedMessage = new Message.Builder()
+//                        .setUser(you)
+//                        .setRightMessage(false)
+//                        .setMessageText(ChatBot.talk(me.getName(), message.getMessageText()))
+//                        .build();
+//
+//                // This is a demo bot
+//                // Return within 3 seconds
+//                int sendDelay = (new Random().nextInt(4) + 1) * 1000;
+//                new Handler().postDelayed(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        mChatView.receive(receivedMessage);
+//                    }
+//                }, sendDelay);
             }
 
         });

@@ -10,15 +10,20 @@ import java.util.List;
 import co.getchannel.channel.CHConfiguration;
 import co.getchannel.channel.Channel;
 import co.getchannel.channel.callback.ThreadFetchComplete;
+import co.getchannel.channel.callback.SendMessageComplete;
 import co.getchannel.channel.api.CHAPI;
 import co.getchannel.channel.api.CHAPIInterface;
 import co.getchannel.channel.helpers.CHConstants;
 import co.getchannel.channel.models.internal.Agent;
 import co.getchannel.channel.models.internal.Application;
 import co.getchannel.channel.models.internal.Client;
+import co.getchannel.channel.models.internal.Message;
+import co.getchannel.channel.models.internal.MessageData;
 import co.getchannel.channel.responses.CHApplicationInfoResponse;
 import co.getchannel.channel.responses.CHClientResponse;
+import co.getchannel.channel.responses.CHMessageResponse;
 import co.getchannel.channel.responses.CHThreadResponse;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -191,6 +196,32 @@ public class CHClient {
 
             @Override
             public void onFailure(Call<CHThreadResponse>call, Throwable t) {
+                // Log error here since request failed
+                Log.d(CHConstants.kChannel_tag,t.toString());
+            }
+        });
+    }
+
+    public static void sendMessage(final SendMessageComplete sentComplete, Message message){
+
+
+        CHAPIInterface apiService = CHAPI.getAPIWithApplication().create(CHAPIInterface.class);
+        MessageData md = new MessageData();
+        md.setData(message);
+        Call<CHMessageResponse> call = apiService.sendMessage(md);
+        call.enqueue(new Callback<CHMessageResponse>() {
+            @Override
+            public void onResponse(Call<CHMessageResponse> call, Response<CHMessageResponse> response) {
+                if (response.code() == 200){
+                    Log.d(CHConstants.kChannel_tag, "activeThread " + response.body());
+                    sentComplete.complete(response.body());
+                }else{
+                    Log.d(CHConstants.kChannel_tag, response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<CHMessageResponse>call, Throwable t) {
                 // Log error here since request failed
                 Log.d(CHConstants.kChannel_tag,t.toString());
             }
